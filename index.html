@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SAVRA Referral System</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input, button { padding: 10px; margin: 5px; width: 250px; }
+    h2 { margin-top: 30px; }
+  </style>
+</head>
+
+<body>
+
+<h2>Generate Referral Code</h2>
+<input id="name" placeholder="Customer Name">
+<input id="phone" placeholder="Phone">
+<button onclick="generate()">Generate</button>
+
+<h2>Redeem Referral</h2>
+<input id="code" placeholder="Referral Code">
+<input id="refPhone" placeholder="Referrer Phone">
+<input id="friendName" placeholder="Friend Name">
+<input id="friendPhone" placeholder="Friend Phone">
+<input id="amount" placeholder="Billing Amount">
+<button onclick="redeem()">Redeem</button>
+
+<script>
+const API_URL = "PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE";
+
+// Generate Code
+function generate() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "addCustomer",
+      name: document.getElementById("name").value,
+      phone: document.getElementById("phone").value
+    })
+  })
+  .then(res => res.text())
+  .then(code => alert("Referral Code: " + code));
+}
+
+// Redeem
+function redeem() {
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({
+      action: "redeem",
+      code: document.getElementById("code").value,
+      referrerPhone: document.getElementById("refPhone").value,
+      friendName: document.getElementById("friendName").value,
+      friendPhone: document.getElementById("friendPhone").value,
+      amount: document.getElementById("amount").value
+    })
+  })
+  .then(res => res.text())
+  .then(msg => alert(msg));
+}
+</script>
+
+</body>
+</html>
