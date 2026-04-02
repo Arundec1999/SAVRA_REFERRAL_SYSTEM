@@ -27,24 +27,30 @@ input,button{width:100%;padding:10px;margin-top:8px;}
   <div onclick="show('analytics')">Analytics</div>
 </div>
 
+<!-- GENERATE -->
 <div id="gen" class="section active">
 <div class="box">
-<input id="gname" placeholder="Name">
-<input id="gphone" placeholder="Phone">
-<button onclick="createCustomer()">Generate</button>
+<input id="gname" placeholder="Customer Name">
+<input id="gphone" placeholder="Phone Number">
+<button onclick="createCustomer()">Generate Code</button>
 <div id="gresult"></div>
 </div>
 </div>
 
+<!-- BILLING -->
 <div id="bill" class="section">
 <div class="box">
 
+<h3>Customer Details</h3>
+<input id="bname" placeholder="Customer Name">
 <input id="bphone" placeholder="Customer Phone">
 <div id="custStatus"></div>
 
+<h3>Referral Details</h3>
 <input id="code" placeholder="Referral Code">
 <div id="referrer"></div>
 
+<h3>Billing</h3>
 <input id="amount" placeholder="Bill Amount">
 <div id="calc"></div>
 
@@ -56,33 +62,37 @@ input,button{width:100%;padding:10px;margin-top:8px;}
 </div>
 </div>
 
+<!-- ERP -->
 <div id="erp" class="section">
 <div class="box">
-<button onclick="loadERP()">Load</button>
+<button onclick="loadERP()">Load Pending</button>
 <div id="erpList"></div>
 </div>
 </div>
 
+<!-- RENEW -->
 <div id="renew" class="section">
 <div class="box">
-<input id="rphone" placeholder="Phone">
+<input id="rphone" placeholder="Customer Phone">
 <div id="rname"></div>
-<button onclick="renew()">Renew</button>
+<button onclick="renew()">Renew Code</button>
 <div id="rresult"></div>
 </div>
 </div>
 
+<!-- ANALYTICS -->
 <div id="analytics" class="section">
 <div class="box">
-<input id="aphone" placeholder="Phone">
+<input id="aphone" placeholder="Customer Phone">
 <button onclick="getAnalytics()">Check</button>
 <div id="aresult"></div>
 </div>
 </div>
 
 <script>
-const URL="https://script.google.com/macros/s/AKfycbzP79KNZn6dBKo5x8B3vOOal4xYLsNyaLt8E_4Anxt_aWsI1wym0ZC2w680VcwZ7fPn/exec";
+const URL="PASTE_SCRIPT_URL";
 
+// NAV
 function show(id){
 document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
 document.getElementById(id).classList.add('active');
@@ -99,33 +109,39 @@ custStatus.innerHTML=r.status=="Old"
 });
 });
 
-// REFERRER FETCH
+// REFERRER FETCH (NAME + PHONE)
 code.addEventListener("blur",()=>{
 fetch(URL+`?action=getReferrer&code=${code.value}`)
 .then(r=>r.json())
 .then(r=>{
 referrer.innerHTML=r.status=="Success"
-? `Referrer: ${r.name}`
+? `Referrer: ${r.name} | ${code.value.split("-")[1]}`
 : `<span class="red">Invalid Code</span>`;
 });
 });
 
-// CALC
+// CALCULATION
 amount.addEventListener("input",()=>{
 const b=Number(amount.value)||0;
 const d=b*0.05;
 const n=b-d;
 const r=Math.floor(n/5000)*250;
-calc.innerHTML=`Discount:${d} Net:${n} Reward:${r}`;
+calc.innerHTML=`Discount: ₹${d} | Net: ₹${n} | Reward: ₹${r}`;
 });
 
-// BILL
+// SUBMIT BILL
 function submitBill(){
+
+if(!bname.value || !bphone.value){
+  bresult.innerHTML="<span class='red'>Enter customer name & phone</span>";
+  return;
+}
+
 fetch(URL,{
 method:"POST",
 body:JSON.stringify({
 referralCode:code.value,
-customerName:"",
+customerName:bname.value,
 customerPhone:bphone.value,
 billAmount:amount.value,
 billNumber:billNo.value
@@ -139,7 +155,7 @@ bresult.innerHTML=r.status=="Success"
 });
 }
 
-// CREATE
+// CREATE CUSTOMER
 function createCustomer(){
 fetch(URL+`?action=createCustomer&name=${gname.value}&phone=${gphone.value}`)
 .then(r=>r.json())
@@ -164,12 +180,12 @@ function mark(row){
 fetch(URL+`?action=markERP&row=${row}`).then(()=>loadERP());
 }
 
-// RENEW
+// RENEW (AUTO NAME)
 rphone.addEventListener("blur",()=>{
 fetch(URL+`?action=getCustomer&phone=${rphone.value}`)
 .then(r=>r.json())
 .then(r=>{
-rname.innerHTML=r.name||"Not found";
+rname.innerHTML=r.name || "Customer not found";
 });
 });
 
@@ -186,7 +202,7 @@ function getAnalytics(){
 fetch(URL+`?action=analytics&phone=${aphone.value}`)
 .then(r=>r.json())
 .then(r=>{
-aresult.innerHTML=`Referrals:${r.totalReferrals} | Rewards:${r.totalRewards}`;
+aresult.innerHTML=`Referrals: ${r.totalReferrals} | Rewards: ₹${r.totalRewards}`;
 });
 }
 </script>
