@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generate Referral</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+body{font-family:Arial;background:#f4f4f4;padding:20px;}
+.box{max-width:400px;margin:auto;background:white;padding:20px;border-radius:10px;}
+input,button{width:100%;padding:10px;margin-top:10px;}
+#qrcode{text-align:center;margin-top:20px;}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+<h2>Create Referral</h2>
+
+<input id="name" placeholder="Name">
+<input id="phone" placeholder="Phone">
+
+<button onclick="gen()">Generate</button>
+
+<div id="result"></div>
+<div id="qrcode"></div>
+</div>
+
+<script>
+const URL="PASTE_SCRIPT_URL";
+
+function gen(){
+  const name=document.getElementById("name").value;
+  const phone=document.getElementById("phone").value;
+
+  fetch(URL+`?action=createCustomer&name=${name}&phone=${phone}`)
+  .then(r=>r.json())
+  .then(r=>{
+    if(r.status=="Success"){
+      result.innerHTML="Code:"+r.code;
+      qrcode.innerHTML="";
+      new QRCode(qrcode,r.code);
+    }else{
+      result.innerHTML=r.message;
+    }
+  });
+}
+</script>
+
+</body>
+</html>
