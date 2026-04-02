@@ -2,61 +2,168 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SAVRA Referral</title>
+<title>SAVRA Dashboard</title>
+
+<style>
+body{font-family:Arial;background:#f4f4f4;margin:0;}
+.nav{display:flex;background:black;color:white;}
+.nav div{flex:1;padding:12px;text-align:center;cursor:pointer;}
+.nav div:hover{background:#333;}
+.section{display:none;padding:20px;}
+.active{display:block;}
+.box{background:white;padding:15px;margin-bottom:15px;border-radius:10px;}
+input,button{width:100%;padding:10px;margin-top:8px;}
+</style>
 </head>
+
 <body>
 
-<h2>SAVRA Referral</h2>
+<div class="nav">
+  <div onclick="show('gen')">Generate</div>
+  <div onclick="show('bill')">Billing</div>
+  <div onclick="show('erp')">ERP</div>
+  <div onclick="show('renew')">Renew</div>
+  <div onclick="show('analytics')">Analytics</div>
+</div>
 
-<input id="code" placeholder="Referral Code">
-<div id="referrer">Referrer: -</div>
+<!-- GENERATE -->
+<div id="gen" class="section active">
+  <div class="box">
+    <h3>Create Customer</h3>
+    <input id="gname" placeholder="Name">
+    <input id="gphone" placeholder="Phone">
+    <button onclick="createCustomer()">Generate Code</button>
+    <div id="gresult"></div>
+    <div id="qrcode"></div>
+  </div>
+</div>
 
-<input id="name" placeholder="Customer Name">
-<input id="phone" placeholder="Phone">
-<input id="bill" placeholder="Bill Amount" type="number">
-<input id="billNo" placeholder="Bill Number">
+<!-- BILLING -->
+<div id="bill" class="section">
+  <div class="box">
+    <h3>Billing</h3>
 
-<div id="calc"></div>
+    <input id="bphone" placeholder="Customer Phone">
+    <div id="custStatus"></div>
 
-<button onclick="submit()">Submit</button>
+    <input id="code" placeholder="Referral Code">
+    <div id="referrer"></div>
 
-<div id="result"></div>
+    <input id="amount" placeholder="Bill Amount" type="number">
+    <div id="calc"></div>
+
+    <input id="billNo" placeholder="Bill Number">
+
+    <button onclick="submitBill()">Submit</button>
+    <div id="bresult"></div>
+  </div>
+</div>
+
+<!-- ERP -->
+<div id="erp" class="section">
+  <div class="box">
+    <h3>Pending ERP</h3>
+    <button onclick="loadERP()">Load Data</button>
+    <div id="erpList"></div>
+  </div>
+</div>
+
+<!-- RENEW -->
+<div id="renew" class="section">
+  <div class="box">
+    <h3>Renew Code</h3>
+    <input id="rphone" placeholder="Phone">
+    <button onclick="renew()">Renew Code</button>
+    <div id="rresult"></div>
+  </div>
+</div>
+
+<!-- ANALYTICS -->
+<div id="analytics" class="section">
+  <div class="box">
+    <h3>Customer Insights</h3>
+    <input id="aphone" placeholder="Phone">
+    <button onclick="getAnalytics()">Check</button>
+    <div id="aresult"></div>
+  </div>
+</div>
 
 <script>
 const URL="https://script.google.com/macros/s/AKfycbzP79KNZn6dBKo5x8B3vOOal4xYLsNyaLt8E_4Anxt_aWsI1wym0ZC2w680VcwZ7fPn/exec";
 
-document.getElementById("code").addEventListener("blur",()=>{
-  fetch(URL+"?action=getReferrer&code="+code.value)
+// NAV
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// GENERATE
+function createCustomer(){
+  fetch(URL+`?action=createCustomer&name=${gname.value}&phone=${gphone.value}`)
   .then(r=>r.json())
   .then(r=>{
-    referrer.innerHTML=r.status=="Success"?"Referrer:"+r.name:"Invalid";
+    gresult.innerHTML=r.code||r.message;
   });
-});
+}
 
-bill.addEventListener("input",()=>{
-  const b=Number(bill.value)||0;
+// BILLING CALC
+amount.addEventListener("input",()=>{
+  const b=Number(amount.value)||0;
   const d=b*0.05;
   const n=b-d;
   const r=Math.floor(n/5000)*250;
   calc.innerHTML=`Discount:${d} Net:${n} Reward:${r}`;
 });
 
-function submit(){
+// FETCH REFERRER
+code.addEventListener("blur",()=>{
+  fetch(URL+`?action=getReferrer&code=${code.value}`)
+  .then(r=>r.json())
+  .then(r=>{
+    referrer.innerHTML=r.status=="Success"?"Referrer:"+r.name:"Invalid";
+  });
+});
+
+// SUBMIT BILL
+function submitBill(){
   fetch(URL,{
     method:"POST",
     body:JSON.stringify({
       referralCode:code.value,
-      customerName:name.value,
-      customerPhone:phone.value,
-      billAmount:bill.value,
+      customerName:"", // optional
+      customerPhone:bphone.value,
+      billAmount:amount.value,
       billNumber:billNo.value
     })
   })
   .then(r=>r.json())
   .then(r=>{
-    result.innerHTML=r.status=="Success"?
+    bresult.innerHTML=r.status=="Success"?
       `Reward:${r.reward}<br>New Code:${r.newCustomerCode}`:
       r.message;
+  });
+}
+
+// ERP LOAD (placeholder)
+function loadERP(){
+  erpList.innerHTML="Connect in next step";
+}
+
+// RENEW
+function renew(){
+  fetch(URL+`?action=renew&phone=${rphone.value}`)
+  .then(r=>r.json())
+  .then(r=>{
+    rresult.innerHTML=r.code||r.message;
+  });
+}
+
+// ANALYTICS
+function getAnalytics(){
+  fetch(URL+`?action=analytics&phone=${aphone.value}`)
+  .then(r=>r.json())
+  .then(r=>{
+    aresult.innerHTML=JSON.stringify(r);
   });
 }
 </script>
