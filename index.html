@@ -1,24 +1,11 @@
 <!DOCTYPE html>
-
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAVRA Referral</title>
-
-<style>
-body{font-family:Arial;background:#f4f4f4;padding:20px;}
-.box{max-width:400px;margin:auto;background:white;padding:20px;border-radius:10px;}
-input,button{width:100%;padding:10px;margin-top:10px;}
-.result{margin-top:10px;padding:10px;}
-.success{background:#d4edda;}
-.error{background:#f8d7da;}
-</style>
-
 </head>
-
 <body>
 
-<div class="box">
 <h2>SAVRA Referral</h2>
 
 <input id="code" placeholder="Referral Code">
@@ -29,55 +16,46 @@ input,button{width:100%;padding:10px;margin-top:10px;}
 <input id="bill" placeholder="Bill Amount" type="number">
 <input id="billNo" placeholder="Bill Number">
 
-<div id="calc">Discount:0 | Net:0 | Reward:0</div>
+<div id="calc"></div>
 
 <button onclick="submit()">Submit</button>
 
 <div id="result"></div>
-</div>
 
 <script>
 const URL="https://script.google.com/macros/s/AKfycbzP79KNZn6dBKo5x8B3vOOal4xYLsNyaLt8E_4Anxt_aWsI1wym0ZC2w680VcwZ7fPn/exec";
 
-// auto fetch referrer
 document.getElementById("code").addEventListener("blur",()=>{
-  const code=document.getElementById("code").value;
-  fetch(URL+"?action=getReferrer&code="+code)
+  fetch(URL+"?action=getReferrer&code="+code.value)
   .then(r=>r.json())
   .then(r=>{
-    document.getElementById("referrer").innerHTML=
-      r.status=="Success"?"Referrer: "+r.name:"Invalid Code";
+    referrer.innerHTML=r.status=="Success"?"Referrer:"+r.name:"Invalid";
   });
 });
 
-// calc
-document.getElementById("bill").addEventListener("input",()=>{
-  const b=Number(document.getElementById("bill").value)||0;
+bill.addEventListener("input",()=>{
+  const b=Number(bill.value)||0;
   const d=b*0.05;
   const n=b-d;
   const r=Math.floor(n/5000)*250;
-  document.getElementById("calc").innerHTML=
-    `Discount:${d} | Net:${n} | Reward:${r}`;
+  calc.innerHTML=`Discount:${d} Net:${n} Reward:${r}`;
 });
 
 function submit(){
-  const data={
-    referralCode:code.value,
-    customerName:name.value,
-    customerPhone:phone.value,
-    billAmount:bill.value,
-    billNumber:billNo.value
-  };
-
-  fetch(URL,{method:"POST",body:JSON.stringify(data)})
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({
+      referralCode:code.value,
+      customerName:name.value,
+      customerPhone:phone.value,
+      billAmount:bill.value,
+      billNumber:billNo.value
+    })
+  })
   .then(r=>r.json())
   .then(r=>{
-    document.getElementById("result").className=
-      r.status=="Success"?"result success":"result error";
-
-    document.getElementById("result").innerHTML=
-      r.status=="Success"?
-      `Reward ₹${r.reward}<br>New Code:${r.newCustomerCode}`:
+    result.innerHTML=r.status=="Success"?
+      `Reward:${r.reward}<br>New Code:${r.newCustomerCode}`:
       r.message;
   });
 }
